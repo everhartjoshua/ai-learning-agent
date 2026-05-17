@@ -1,0 +1,87 @@
+# ─────────────────────────────────────────
+# Secrets & local config
+# ─────────────────────────────────────────
+# NEVER commit real credentials. Use .env locally and Secret Manager in prod.
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+service-account-*.json
+gcp-credentials*.json
+
+# ─────────────────────────────────────────
+# Application data
+# ─────────────────────────────────────────
+# SQLite + ChromaDB live here. Real student records — never commit.
+data/
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+
+# ─────────────────────────────────────────
+# Python
+# ─────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ─────────────────────────────────────────
+# Terraform (we'll add infra/ later)
+# ─────────────────────────────────────────
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# ─────────────────────────────────────────
+# Editors / IDEs
+# ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─────────────────────────────────────────
+# Streamlit
+# ─────────────────────────────────────────
+.streamlit/secrets.toml
+
+# ─────────────────────────────────────────
+# Project-specific scratch / backups
+# ─────────────────────────────────────────
+.write_test
+.backup-pre-fixes/
+*.bak

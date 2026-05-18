@@ -1,0 +1,68 @@
+# ──────────────────────────────────────────────────────────────
+# docker-compose.yml — local development stack
+# ──────────────────────────────────────────────────────────────
+# Defines the two-service AI learning agent app for local
+# development. Production deployment will use Cloud Run (two
+# separate services) and Cloud SQL (no local volume); this file
+# is for `docker compose up` on your laptop.
+#
+# Common commands:
+#   docker compose up --build        # build images then start
+#   docker compose up -d             # start in background
+#   docker compose logs -f backend   # tail backend logs
+#   docker compose down              # stop and remove containers
+#   docker compose down -v           # also remove volumes
+#
+# Service discovery: both services share a private network
+# (auto-created as <project>_default). Either service can reach
+# the other by service name (e.g. frontend hits "http://backend:8000").
+
+services:
+
+  # ── FastAPI backend ─────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: learning-agent-backend:dev
+    container_name: learning-agent-backend
+    ports:
+      # host:container — exposes backend on localhost:8000 for
+      # direct browser/curl access. Frontend reaches it via the
+      # compose network, NOT through this port mapping.
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Bind-mount the data/ directory so the SQLite database
+      # survives `docker compose down`. Local dev only — in
+      # production we use Cloud SQL and no local volume.
+      - ./data:/app/data
+    restart: unless-stopped
+
+  # ── Streamlit frontend ──────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: learning-agent-frontend:dev
+    container_name: learning-agent-frontend
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      # Override the .env-provided API_BASE. Inside the compose
+      # network, "backend" resolves via DNS to the backend
+      # container's IP — no localhost, no hardcoded URLs.
+      API_BASE: "http://backend:8000"
+    depends_on:
+      # Wait for the backend container to START before launching
+      # the frontend. NOTE: this only checks the container is
+      # running, not that uvicorn is actually accepting requests
+      # yet. If you see a brief 502 right after `up`, just
+      # refresh — the backend usually catches up within a few
+      # seconds. A proper healthcheck would make this strict;
+      # we'll add one in a later optimization pass.
+      - backend
+    restart: unless-stopped

@@ -5,10 +5,16 @@ Run with: streamlit run frontend/app.py
 Make sure the FastAPI backend is running: uvicorn backend.api.main:app --reload
 """
 
+import os
+
 import streamlit as st
 import httpx
 
-API_BASE = "http://localhost:8000"
+# Where to find the FastAPI backend.
+# Defaults to localhost for native development; override via the API_BASE
+# environment variable when running in containers (e.g. http://backend:8000
+# inside docker-compose, or the Cloud Run service URL in production).
+API_BASE = os.getenv("API_BASE", "http://localhost:8000")
 
 st.set_page_config(
     page_title="AI Learning Agent",

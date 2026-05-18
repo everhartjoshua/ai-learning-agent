@@ -1,0 +1,73 @@
+# ──────────────────────────────────────────────────────────────
+# Files NOT to copy into Docker build context / image.
+# ──────────────────────────────────────────────────────────────
+# Two reasons this file is critical:
+#   1. SECURITY — if .env is in the build context, secrets get
+#      baked into the image and shared with anyone who pulls it.
+#   2. SPEED — every file in the context is sent to the Docker
+#      daemon before the build runs. Excluding large dirs (data/,
+#      .venv/) makes builds dramatically faster.
+
+# ── Git ────────────────────────────────────────────────────────
+.git/
+.github/
+.gitignore
+.gitattributes
+
+# ── Local config / secrets (NEVER bake into images) ────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+service-account-*.json
+
+# ── Python build artifacts ─────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.venv/
+venv/
+env/
+ENV/
+
+# ── Runtime state (must NEVER be in an image) ──────────────────
+data/
+*.db
+*.sqlite
+*.sqlite3
+chroma_db/
+
+# ── Editors / IDEs ─────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Terraform (will live in infra/ in Phase 3) ─────────────────
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# ── Docs / scratch (not needed at runtime) ─────────────────────
+*.md
+!README.md             # keep the README — small, lets `docker run` show it
+.backup-pre-fixes/
+*.bak
+.write_test
+
+# ── Streamlit ──────────────────────────────────────────────────
+.streamlit/secrets.toml

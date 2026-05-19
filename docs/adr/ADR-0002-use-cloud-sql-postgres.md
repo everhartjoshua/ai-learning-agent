@@ -1,6 +1,6 @@
 # ADR-0002: Use Cloud SQL Postgres
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-18
 
 ## Context
@@ -19,14 +19,24 @@ Low Scale & Throughput: For the foreseeable future, expected traffic is minimal 
 
 Strict Cost Discipline: The infrastructure is currently operating within the constraints of a $300 GCP trial credit. Minimizing fixed monthly compute and storage costs is a critical priority for this environment.
 
-We need to evaluate our GCP-compatible database options (e.g., Cloud SQL, managed Serverless options, or persistent volume SQLite) to find the most cost-effective solution that satisfies our relational data requirements without over-provisioning infrastructure.
+We need to evaluate our GCP-compatible database options (e.g., Cloud SQL, managed Serverless options) to find the most cost-effective solution that satisfies our relational data requirements without over-provisioning infrastructure.
 
 
-### Options considered
+## Options considered
 
 ### Option A: Cloud SQL Postgres
 
-Cloud SQL is Google Cloud’s fully managed relational database service, supporting standard database engines including PostgreSQL, MySQL, and SQL Server. It operates on a traditional instance-based infrastructure model, allowing configurations to scale down to shared-core machine types (such as db-f1-micro) with fixed monthly compute and storage pricing. It natively supports standard SQL dialects, relational schemas, foreign keys, and ACID transactions. Fully compatible with our existing SQLAlchemy ORM. Swapping to Cloud SQL requires no code refactoring, only a simple DATABASE_URL update. Natively supports our established schema, including foreign keys, joins, and strict data relationships.The instance incurs a monthly cost regardless of application usage, lacking true scale-to-zero capabilities.
+Cloud SQL is Google Cloud’s fully managed relational database service, supporting standard database engines including PostgreSQL, MySQL, and SQL Server. 
+
+It operates on a traditional instance-based infrastructure model, allowing configurations to scale down to the smallest shared-core machine types available for Postgres at deployment.
+
+ It natively supports standard SQL dialects, relational schemas, foreign keys, and ACID transactions. 
+ 
+ Fully compatible with our existing SQLAlchemy ORM. Swapping to Cloud SQL requires no code refactoring, only a simple DATABASE_URL update. 
+ 
+ Natively supports our established schema, including foreign keys, joins, and strict data relationships.
+ 
+ The instance incurs a monthly cost regardless of application usage, lacking true scale-to-zero capabilities.
 
 ### Option B: AlloyDB for PostgreSQL
 
@@ -36,9 +46,19 @@ Google’s premium, high-performance, fully managed PostgreSQL-compatible databa
 
 GCP’s serverless, highly scalable NoSQL document database. Features a generous free tier and scales to zero, meaning it would likely cost nothing to run under our expected load. Fully serverless with no infrastructure to provision or manage. As a document store, Firestore does not support relational schemas, complex joins, or referential integrity. Adopting this option would force us to completely abandon SQLAlchemy and entirely rewrite the application's data access layer (backend/db/models.py) to fit a denormalized model.
 
+## Dismissals
+
+### Dismissal A: Cloud Spanner
+
+Globally-distributed strong consistency at petabyte scale — vastly overprovisioned for an app with a few hundred rows and one learner at a time
+
+### Dismissal B: Bigtable
+
+Wide-column NoSQL designed for analytics and time-series at huge scale; wrong category entirely for a relational OLTP workload
+
 ## Decision
 
-We will deploy Cloud SQL (specifically configured with a minimal PostgreSQL instance, such as a shared-core db-f1-micro) as the primary relational database for the application.
+We will deploy Cloud SQL (specifically configured with a minimal PostgreSQL instance, such as a shared-core the smallest shared-core machine type available for Postgres at the time of deployment) as the primary relational database for the application.
 
 
 ## Consequences
@@ -59,6 +79,12 @@ Fixed Baseline Cost: Unlike true serverless options, Cloud SQL does not scale do
 
 Manual Scaling Required: If application traffic or storage requirements grow significantly beyond our current forecast, we will eventually need to manually scale up the machine type or disk size, as it does not auto-scale compute resource tiers out of the box.
 
+Cloud Run's per-request horizontal autoscaling can multiply database connections faster than Postgres expects. Each container instance maintains its own SQLAlchemy connection pool; under bursty load, total connections can quickly exceed Cloud SQL's max_connections limit (typically 100 on a shared-core instance). A connection pooler — pgbouncer, the Cloud SQL Auth Proxy in pooling mode, or PgBouncer-backed Cloud SQL connections — will be required before going to production. Tracked as a Phase 3 follow-up.
+
+Network round-trip latency: going from in-process SQLite reads (microseconds) to network-hop Postgres reads (a few milliseconds per query, sometimes more on shared-core instances) compounds across a request that runs multiple queries.
+
+Maintenance Windows: Cloud SQL instances have weekly maintenance windows during which the instance may be briefly unavailable (usually under a minute, but possible). For a learning app, fine; for a 24/7 enterprise system this would shape the choice differently.
+
 ### Trade-offs accepted
 
 Fixed Baseline Cost over True Serverless Scaling: We are intentionally accepting a fixed, continuous monthly compute charge from Cloud SQL instead of a scale-to-zero serverless model (like Firestore). This is an acceptable trade-off because rewriting our entire relational database layer and data schema to support a NoSQL paradigm would require significant engineering effort, introducing severe project delays that outweigh the minor monthly cost of a shared-core instance.
@@ -67,7 +93,7 @@ Manual Upgrades over Automated Vertical Scaling: We accept that scaling compute 
 
 ## References
 
-Option 1: Cloud SQL
+Option A: Cloud SQL
 
 Google Cloud SQL Documentation: https://cloud.google.com/sql/docs
 
@@ -75,7 +101,7 @@ PostgreSQL on Cloud SQL Overview: https://cloud.google.com/sql/docs/postgres
 
 Pricing Documentation: https://cloud.google.com/sql/docs/postgres/pricing
 
-Option 2: AlloyDB for PostgreSQL
+Option B: AlloyDB for PostgreSQL
 
 Google Cloud AlloyDB Documentation: https://cloud.google.com/alloydb/docs
 
@@ -83,7 +109,7 @@ AlloyDB Architectural Overview: https://cloud.google.com/alloydb/docs/overview
 
 Pricing Documentation: https://cloud.google.com/alloydb/pricing
 
-Option 3: Firestore
+Option C: Firestore
 
 Google Cloud Firestore Documentation: https://cloud.google.com/firestore/docs
 

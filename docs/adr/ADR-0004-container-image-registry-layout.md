@@ -11,18 +11,25 @@ The actual architectural decisions revolve around how we organize and operate th
 
 ## Options considered
 
-### Option A: Artifact Registry
+### Option A: Artifact Registry — per-service repositories
 
 Google Cloud's modern, fully managed container image registry. It integrates natively with GCP IAM, supports fine-grained access control, allows regional co-location, and is the official standard for all new GCP infrastructure.
 
-### Option B: Legacy Container Registry (gcr.io)
+Provides granular IAM controls and per-service lifecycle policies, aligning with enterprise standards. Requires provisioning more infrastructure resources via Terraform.
+
+### Option B: Artifact Registry — single shared repository
+
+Google Cloud's modern, fully managed container image registry. It integrates natively with GCP IAM, supports fine-grained access control, allows regional co-location, and is the official standard for all new GCP infrastructure.
+
+Simplifies Terraform state and provides a single location for all project images, but limits the ability to apply different IAM or retention rules per service.
+
+### Option C: Legacy Container Registry (gcr.io)
 
 Google's previous generation container registry. It is currently in maintenance mode and deprecated for new deployments. Google's official documentation explicitly steers all new projects away from this service, making it non-viable for our architecture.
 
-### Option C: Docker Hub
+### Option D: Docker Hub
 
 The industry-standard public container registry. While ubiquitous, utilizing Docker Hub for a GCP-deployed application introduces an external network dependency, subjects deployments to public image pull rate limits (which can severely impact Cloud Run cold-start reliability), and entirely bypasses GCP's native IAM security controls.
-
 
 ## Decision
 

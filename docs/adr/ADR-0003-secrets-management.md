@@ -1,4 +1,4 @@
-# ADR-0002: Secrets Management
+# ADR-0003: Secrets Management
 
 **Status:** Accepted
 **Date:** 2026-05-19
@@ -32,7 +32,7 @@ A historical pattern where sensitive values are stored in a standard Google Clou
 
 We will use GCP Secret Manager as the exclusive source of truth for runtime application secrets (LLM API keys, database connection strings) and integrate it natively with Cloud Run.
 
-We will use GitHub Actions Secrets strictly for CI/CD pipeline configuration (e.g., providing the pipeline access to GCP, though the contents of those secrets will change once Workload Identity Federation eliminates the need for long-lived service account keys (ADR-0005). We explicitly reject plain Cloud Run environment variables for sensitive data, HashiCorp Vault (due to operational complexity), and the legacy Cloud Storage/KMS pattern.
+We will use GitHub Actions Secrets strictly for CI/CD pipeline configuration (e.g., providing the pipeline access to GCP, though the contents of those secrets will change once Workload Identity Federation eliminates the need for long-lived service account keys (ADR-0005)). We explicitly reject plain Cloud Run environment variables for sensitive data, HashiCorp Vault (due to operational complexity), and the legacy Cloud Storage/KMS pattern.
 
 ## Consequences
 

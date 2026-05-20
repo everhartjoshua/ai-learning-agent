@@ -5,7 +5,7 @@
 
 ## Context
 
-To deploy our containerized application to Google Cloud Run, we require a container image registry. While Google’s legacy Container Registry (gcr.io) still exists, it is in maintenance mode and deprecated for new projects, making Artifact Registry the mandatory native choice. Similarly, while Docker Hub is an industry standard, utilizing it for a GCP-deployed service introduces an external network dependency, exposes us to public pull rate limits (which degrade cold-start reliability), and lacks native integration with GCP IAM. Of the available platforms — Artifact Registry, Container Registry, Docker Hub — only Artifact Registry meets the criteria for a GCP-native, IAM-integrated, modern container registry. The remaining decisions concern how to organize and operate it
+To deploy our containerized application to Google Cloud Run, we require a container image registry. While Google’s legacy Container Registry (gcr.io) still exists, it is in maintenance mode and deprecated for new projects. Similarly, while Docker Hub is an industry standard, utilizing it for a GCP-deployed service introduces an external network dependency, exposes us to public pull rate limits (which degrade cold-start reliability), and lacks native integration with GCP IAM. Of the available platforms — Artifact Registry, Container Registry, Docker Hub — only Artifact Registry meets the criteria for a GCP-native, IAM-integrated, modern container registry. The remaining decisions concern how to organize and operate it.
 
 The actual architectural decisions revolve around how we organize and operate the Artifact Registry. We must establish conventions for repository layout, tagging strategies, retention policies, regional placement, and vulnerability scanning. These choices sit at the intersection of developer velocity, production reliability, and cost control—particularly given our constraint of operating within a $300 GCP trial credit.
 
@@ -69,13 +69,13 @@ We will enable automated Artifact Registry vulnerability scanning to ensure cont
 
 - Retention Policy Blind Spots: Artifact Registry's cleanup policies do not natively integrate with Cloud Run to know if an image is currently pinned to an active revision. Because the rules are strictly heuristic (e.g., "delete older than X days"), we must configure the retention window conservatively to avoid the catastrophic failure mode of deleting an image currently in use, which would render that Cloud Run revision unservable.
 - Trial Credit Consumption: Automatic scanning introduces a fixed charge of roughly $0.26 per image scan. Under an active development lifecycle with frequent pushes, this will consume a portion of our $300 trial credit.
-- Deployment-time verbosity and friction. SHA-based tags require dynamically computing and passing the commit SHA at deployment time, which is more verbose than semantic tags like :v1.2.3 and provides less at-a-glance information to humans reading deployment logs. CI must be configured to inject the SHA correctly; manual gcloud run deploy commands are unwieldy
+- Deployment-time verbosity and friction. SHA-based tags require dynamically computing and passing the commit SHA at deployment time, which is more verbose than semantic tags like :v1.2.3 and provides less at-a-glance information to humans reading deployment logs. CI must be configured to inject the SHA correctly; manual gcloud run deploy commands are unwieldy.
 - More Terraform Overhead: Managing a repository per service requires more boilerplate code in our infrastructure definitions than a single shared bucket.
 
 ### Trade-offs accepted
 
 - Deployment Verbosity over Convenience: We accept that developers and CI pipelines must dynamically calculate and pass Git SHAs into deployment commands, prioritizing the safety of guaranteed rollbacks over the ease of simply typing gcloud run deploy --image backend:latest.
-- Pipeline Complexity over Managed Scanning: We accept the trade-off of saving $0.26 per build by disabling GCP's native vulnerability scanner, which requires us to eventually integrate and maintain our own open-source scanning tool within the GitHub Actions CI pipeline to maintain a secure posture.
+- Scanning Cost over Maximum Trial-Credit Stretching. We accept the recurring per-image-scan cost (roughly $0.26 each) against the trial credit budget in exchange for security visibility from day one. The alternative — disabling native scanning to defer cost — would have created an undocumented future-work obligation to integrate an open-source scanner, and would have signaled that security posture is something we'll address later rather than from the start.
 
 ## References
 

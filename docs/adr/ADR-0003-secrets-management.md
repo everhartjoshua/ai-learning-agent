@@ -1,6 +1,6 @@
 # ADR-0002: Secrets Management
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-19
 
 ## Context
@@ -14,7 +14,7 @@ Furthermore, as we introduce a CI/CD pipeline, we must distinguish between secre
 ## Options considered
 
 ### Option A: GCP Secret Manager
-Google Cloud’s native, fully managed secret storage service. It provides a central repository for storing sensitive data with built-in versioning, granular per-secret IAM access controls, and comprehensive audit logging. It integrates natively with Cloud Run, allowing stored secrets to be securely exposed to the container at runtime as either environment variables or volume-mounted files.
+Google Cloud’s native, fully managed secret storage service. It provides a central repository for storing sensitive data with built-in versioning, granular per-secret IAM access controls, and comprehensive audit logging. It integrates natively with Cloud Run, allowing stored secrets to be securely exposed to the container at runtime as either environment variables or volume-mounted files. Cloud Run integrates with Secret Manager two ways: as environment variables (the common pattern, immutable per instance) and as mounted volume files (less common, theoretically mutable).  Secret Manager costs roughly $0.06 per active secret version per month plus $0.03 per 10,000 access operations.
 
 ### Option B: Cloud Run Plain Environment Variables
 Cloud Run allows standard environment variables to be set directly on the service configuration (e.g., via gcloud run deploy --set-env-vars). These variables are stored in plain text within the service definition and are exposed to the container at runtime. They do not offer version history, secret-specific access controls, or audit logging for access.
@@ -23,16 +23,16 @@ Cloud Run allows standard environment variables to be set directly on the servic
 GitHub's native secret storage mechanism for CI/CD workflows. It securely stores sensitive values at the repository or organization level, injecting them as environment variables specifically during the execution of a GitHub Actions runner. It is designed for build-time operations and does not inherently push secrets into the production runtime environment.
 
 ### Option D: HashiCorp Vault
-An industry-standard, cloud-agnostic secret management platform. It offers advanced features such as dynamic secret generation, leasing, and revocation. It requires provisioning and maintaining dedicated infrastructure (or utilizing the managed HCP Vault cloud offering) and integrating Vault-specific client logic or sidecars into the deployment architecture.
+An industry-standard, cloud-agnostic secret management platform. It offers advanced features such as dynamic secret generation, leasing, and revocation. It requires provisioning and maintaining dedicated infrastructure (or utilizing the managed HCP Vault cloud offering) and integrating Vault-specific client logic or sidecars into the deployment architecture. HCP tier starts around $0.50/hour for the smallest cluster.
 
 ### Option E: Encrypted Cloud Storage with Cloud KMS
-A historical pattern where sensitive values are stored in a standard Google Cloud Storage bucket, heavily restricted via IAM, and encrypted/decrypted at rest and in transit using Google Cloud Key Management Service (KMS). The application or deployment pipeline is responsible for fetching and decrypting the payload at runtime.
+A historical pattern where sensitive values are stored in a standard Google Cloud Storage bucket, heavily restricted via IAM, and encrypted/decrypted at rest and in transit using Google Cloud Key Management Service (KMS). The application or deployment pipeline is responsible for fetching and decrypting the payload at runtime. KMS+GCS combines a small key cost (~$0.06/key/month) with GCS storage and KMS operation fees
 
 ## Decision
 
 We will use GCP Secret Manager as the exclusive source of truth for runtime application secrets (LLM API keys, database connection strings) and integrate it natively with Cloud Run.
 
-We will use GitHub Actions Secrets strictly for CI/CD pipeline configuration (e.g., providing the pipeline access to GCP, though this will eventually be superseded by Workload Identity Federation in ADR-0005). We explicitly reject plain Cloud Run environment variables for sensitive data, HashiCorp Vault (due to operational complexity), and the legacy Cloud Storage/KMS pattern.
+We will use GitHub Actions Secrets strictly for CI/CD pipeline configuration (e.g., providing the pipeline access to GCP, though the contents of those secrets will change once Workload Identity Federation eliminates the need for long-lived service account keys (ADR-0005). We explicitly reject plain Cloud Run environment variables for sensitive data, HashiCorp Vault (due to operational complexity), and the legacy Cloud Storage/KMS pattern.
 
 ## Consequences
 
@@ -53,6 +53,8 @@ We will use GitHub Actions Secrets strictly for CI/CD pipeline configuration (e.
 - Financial Cost: Secret Manager incurs a minor monthly fee based on the number of active secret versions and access operations, adding to our fixed baseline costs.
 
 - Operational Discipline: While Secret Manager supports rotation, actually implementing and testing secret rotation (e.g., rotating the database password without application downtime) requires deliberate operational engineering; the presence of the feature does not guarantee it works in an emergency.
+
+- Rotation does not propagate to running instances. Cloud Run fetches secrets from Secret Manager at container startup; the values are pinned for the life of that instance. After a rotation event, instances that were already running continue using the old secret value until they restart — under scale-to-zero, that may be hours. Effective rotation therefore requires either (a) triggering a redeploy after rotating, (b) mounting secrets as files and adding explicit watch/reload logic in the application, or (c) using Cloud Run's latest secret reference pattern with traffic-shifting on the new revision. Naming this here as a Phase 5 follow-up.
 
 ### Trade-offs accepted
 

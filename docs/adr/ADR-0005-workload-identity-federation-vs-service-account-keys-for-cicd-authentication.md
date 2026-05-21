@@ -56,9 +56,6 @@ Workflows will not use a single "god mode" service account. We will provision sp
 
 We will grant the `roles/iam.workloadIdentityUser` role using `principalSet://` references that match our repository's attribute mapping, allowing the GitHub workflows to impersonate the target service accounts.
 
-###
-
-
 ## Consequences
 
 ### Positive

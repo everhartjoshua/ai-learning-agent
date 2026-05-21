@@ -11,10 +11,6 @@ Furthermore, this infrastructure must operate within the strict confines of a $3
 
 ## Options considered
 
-> Two or more options, each as a short paragraph. Neutral tone — describe what
-> each is, when it shines, what it costs. Don't argue for your favorite here;
-> that's the Decision section's job.
-
 ### Option A: GCP Native Observability (Cloud Logging & Cloud Monitoring)
 
 The native Google Cloud observability suite (formerly Stackdriver). It automatically ingests Cloud Run stdout/stderr logs and infrastructure metrics without any agent configuration. It provides a generous free tier (50 GiB/month for logging) and natively integrates with Cloud Audit Logs for tracking deployment events.

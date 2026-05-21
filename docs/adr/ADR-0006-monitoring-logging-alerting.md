@@ -1,6 +1,6 @@
 # ADR-0006: Monitoring, Logging, and Alerting Stack
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-20
 
 ## Context

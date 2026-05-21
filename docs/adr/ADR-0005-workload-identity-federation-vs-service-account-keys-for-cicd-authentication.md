@@ -13,10 +13,6 @@ This decision addresses the security posture of our CI/CD pipeline identity. It 
 
 ## Options considered
 
-> Two or more options, each as a short paragraph. Neutral tone — describe what
-> each is, when it shines, what it costs. Don't argue for your favorite here;
-> that's the Decision section's job.
-
 ### Option A: Workload Identity Federation (WIF)
 
 The modern industry best practice. Instead of storing long-lived credentials, the GitHub Actions runner receives a short-lived OpenID Connect (OIDC) token from GitHub at the start of a workflow. This token is presented to Google Cloud's Security Token Service, validated, and exchanged for a short-lived GCP access token (typically valid for 1 hour). 

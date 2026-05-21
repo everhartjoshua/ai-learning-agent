@@ -1,6 +1,6 @@
 # ADR-0005: Workload Identity Federation vs. Service Account Keys for CI/CD authentication
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-05-20
 
 ## Context
@@ -82,4 +82,4 @@ We will grant the `roles/iam.workloadIdentityUser` role using `principalSet://` 
 - [Workload Identity Federation Overview](https://cloud.google.com/iam/docs/workload-identity-federation)
 - [Best practices for securing service accounts](https://cloud.google.com/iam/docs/best-practices-for-securing-service-accounts)
 - [About security hardening with OpenID Connect (GitHub Actions)](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
-- [Google GitHub Actions Auth Action Documentation](https://github.com/google-github-actions/auth)0
+- [Google GitHub Actions Auth Action Documentation](https://github.com/google-github-actions/auth)

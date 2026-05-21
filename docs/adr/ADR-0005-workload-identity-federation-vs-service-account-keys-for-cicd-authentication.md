@@ -51,7 +51,6 @@ The provider *must* be configured with an attribute condition that restricts tok
 
 Workflows will not use a single "god mode" service account. We will provision specific service accounts scoped to their pipeline jobs (e.g., a build account that can only push to Artifact Registry; a deploy account that can only update Cloud Run).
 
-
 ### IAM Bindings:
 
 We will grant the `roles/iam.workloadIdentityUser` role using `principalSet://` references that match our repository's attribute mapping, allowing the GitHub workflows to impersonate the target service accounts.

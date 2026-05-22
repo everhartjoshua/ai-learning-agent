@@ -53,7 +53,10 @@ htmlcov/
 *.tfstate.*
 *.tfstate.backup
 .terraform/
-.terraform.lock.hcl
+# NOTE: .terraform.lock.hcl SHOULD be committed — it's the
+# provider dependency lock file (like package-lock.json or
+# Cargo.lock) and ensures everyone running `terraform init`
+# gets identical provider versions. Do NOT add it to .gitignore.
 crash.log
 crash.*.log
 override.tf

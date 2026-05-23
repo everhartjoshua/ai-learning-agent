@@ -21,6 +21,13 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.0"
     }
+    # random — used to generate strong random values that live
+    # only inside Terraform's lifecycle (e.g., database passwords).
+    # See Phase 3.4 / cloud_sql.tf for the rationale.
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   # Backend configuration — where Terraform stores its state.

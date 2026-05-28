@@ -58,6 +58,24 @@ resource "google_artifact_registry_repository_iam_member" "ci_build_writer" {
   member     = "serviceAccount:${google_service_account.service_accounts["ci-build"].email}"
 }
 
+# Read-only project access so `terraform plan` can compare live resource
+# state against the Terraform config without needing per-service viewer roles.
+resource "google_project_iam_member" "ci_build_viewer" {
+  project = var.project_id
+  role    = "roles/viewer"
+  member  = "serviceAccount:${google_service_account.service_accounts["ci-build"].email}"
+}
+
+# The Terraform state bucket is not managed by Terraform (bootstrap
+# chicken-and-egg), so we manage its IAM here as a standalone binding.
+# objectViewer lets terraform init + plan read state; writing the lock
+# is not needed because the plan workflow passes -lock=false.
+resource "google_storage_bucket_iam_member" "ci_build_state_reader" {
+  bucket = "${var.project_id}-tfstate"
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.service_accounts["ci-build"].email}"
+}
+
 # ──────────────────────────────────────────────────────────────
 # IAM bindings for ci-deploy
 # ──────────────────────────────────────────────────────────────

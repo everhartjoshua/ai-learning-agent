@@ -1,0 +1,54 @@
+name: CI — Terraform Plan
+
+# Runs terraform fmt check and terraform plan on every PR that touches
+# infra/. Authenticates to GCP via Workload Identity Federation (ADR-0005)
+# — no static service account keys stored in GitHub.
+#
+# Required repository secrets:
+#   WIF_PROVIDER       — full WIF provider resource name
+#   WIF_SERVICE_ACCOUNT — ci-build SA email
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "infra/**"
+
+permissions:
+  contents: read
+  id-token: write  # required: allows GitHub to mint an OIDC token for WIF
+
+jobs:
+  plan:
+    name: terraform plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Exchange the GitHub OIDC token for short-lived GCP credentials.
+      # Sets up Application Default Credentials used by Terraform automatically.
+      - name: Authenticate to GCP via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: infra
+
+      # Fails if any .tf file is not formatted. Run `terraform fmt -recursive`
+      # locally to fix before pushing.
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        working-directory: infra
+
+      # -lock=false: multiple concurrent PR runs won't deadlock on the state lock.
+      # The plan output is visible in the workflow logs for PR review.
+      - name: Terraform Plan
+        run: terraform plan -lock=false
+        working-directory: infra

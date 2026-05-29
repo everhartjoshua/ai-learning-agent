@@ -1,0 +1,19 @@
+# Ruff configuration — linting rules for CI and local dev.
+# Start conservative: E (pycodestyle errors) + F (pyflakes).
+# Expand the select list as the codebase matures.
+
+[lint]
+select = ["E", "F"]
+ignore = [
+  "E501",  # line-too-long — not enforced yet; format separately when ready
+]
+
+# Don't lint generated files or local tooling
+exclude = [
+  ".git",
+  ".terraform",
+  "__pycache__",
+  "*.egg-info",
+  ".venv",
+  "venv",
+]

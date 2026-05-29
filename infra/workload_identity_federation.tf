@@ -44,7 +44,7 @@ resource "google_service_account_iam_member" "ci_build_wif" {
   # Updated to match the for_each map in service_accounts.tf
   service_account_id = google_service_account.service_accounts["ci-build"].name
   role               = "roles/iam.workloadIdentityUser"
-  
+
   # Scopes the binding strictly to workflows from your specific repository
   member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/everhartjoshua/ai-learning-agent"
 }
@@ -54,7 +54,7 @@ resource "google_service_account_iam_member" "ci_deploy_wif" {
   # Updated to match the for_each map in service_accounts.tf
   service_account_id = google_service_account.service_accounts["ci-deploy"].name
   role               = "roles/iam.workloadIdentityUser"
-  
+
   member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/everhartjoshua/ai-learning-agent"
 }
 

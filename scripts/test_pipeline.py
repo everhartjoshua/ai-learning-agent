@@ -9,7 +9,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from backend.db.models import init_db, SessionLocal, Student, Curriculum, Enrollment
+from backend.db.models import init_db
 from backend.agents import curriculum_agent, assessment_agent, tutor_agent
 
 SAMPLE_JD = """

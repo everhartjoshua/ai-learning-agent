@@ -58,6 +58,14 @@ resource "google_artifact_registry_repository_iam_member" "ci_build_writer" {
   member     = "serviceAccount:${google_service_account.service_accounts["ci-build"].email}"
 }
 
+# Read-only project access so `terraform plan` can compare live resource
+# state against the Terraform config without needing per-service viewer roles.
+resource "google_project_iam_member" "ci_build_viewer" {
+  project = var.project_id
+  role    = "roles/viewer"
+  member  = "serviceAccount:${google_service_account.service_accounts["ci-build"].email}"
+}
+
 # ──────────────────────────────────────────────────────────────
 # IAM bindings for ci-deploy
 # ──────────────────────────────────────────────────────────────

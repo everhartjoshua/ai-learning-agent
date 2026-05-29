@@ -39,10 +39,10 @@ resource "google_sql_database_instance" "main" {
     # ADR-0002, sufficient for our scale (one learner, a few
     # hundred rows per table, dozens of req/s peak).
     tier              = "db-f1-micro"
-    availability_type = "ZONAL"     # single-zone; not HA
+    availability_type = "ZONAL" # single-zone; not HA
     disk_type         = "PD_SSD"
-    disk_size         = 10          # GB
-    disk_autoresize   = true        # grow automatically; never manually resize
+    disk_size         = 10   # GB
+    disk_autoresize   = true # grow automatically; never manually resize
 
     # Daily automated backups, retained per Cloud SQL defaults
     # (typically 7 days). Point-in-time recovery is OFF — it
@@ -50,7 +50,7 @@ resource "google_sql_database_instance" "main" {
     backup_configuration {
       enabled                        = true
       point_in_time_recovery_enabled = false
-      start_time                     = "03:00"   # nightly @ 3 AM UTC
+      start_time                     = "03:00" # nightly @ 3 AM UTC
     }
 
     # IP configuration: public IPv4 is enabled so the Cloud SQL

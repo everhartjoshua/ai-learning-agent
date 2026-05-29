@@ -7,7 +7,7 @@ starting points in the curriculum.
 """
 
 import json
-from backend.llm_client import chat_json, chat
+from backend.llm_client import chat_json
 
 
 DIAGNOSTIC_SYSTEM = """

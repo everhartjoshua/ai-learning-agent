@@ -53,7 +53,7 @@ resource "google_monitoring_alert_policy" "backend_5xx" {
       EOT
 
       comparison      = "COMPARISON_GT"
-      threshold_value = 0.1   # > 0.1 requests/second = > 6 requests/minute
+      threshold_value = 0.1 # > 0.1 requests/second = > 6 requests/minute
       duration        = "300s"
 
       aggregations {
@@ -92,7 +92,7 @@ resource "google_monitoring_alert_policy" "backend_latency_p95" {
       EOT
 
       comparison      = "COMPARISON_GT"
-      threshold_value = 2000   # milliseconds
+      threshold_value = 2000 # milliseconds
       duration        = "300s"
 
       aggregations {
@@ -202,7 +202,7 @@ resource "google_monitoring_alert_policy" "cloudsql_cpu" {
       EOT
 
       comparison      = "COMPARISON_GT"
-      threshold_value = 0.8   # 80% as a fraction
+      threshold_value = 0.8    # 80% as a fraction
       duration        = "600s" # 10 min — CPU spikes are noisier; want sustained
 
       aggregations {

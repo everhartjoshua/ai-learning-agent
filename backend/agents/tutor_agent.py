@@ -487,7 +487,7 @@ def generate_lesson(
     mistake_context = ""
     if recent_mistakes:
         mistake_context = (
-            f"\n\nThe student previously struggled with:\n"
+            "\n\nThe student previously struggled with:\n"
             + "\n".join(f"- {m}" for m in recent_mistakes[:5])
             + "\nMake sure to address these areas clearly."
         )

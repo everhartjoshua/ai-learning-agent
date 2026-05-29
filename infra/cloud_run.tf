@@ -43,13 +43,13 @@ resource "google_cloud_run_v2_service" "backend" {
       image = local.placeholder_image
 
       ports {
-        container_port = 8000   # uvicorn binds here in our Dockerfile
+        container_port = 8000 # uvicorn binds here in our Dockerfile
       }
 
       resources {
         limits = {
           cpu    = "1"
-          memory = "1Gi"        # ChromaDB embedding models need headroom
+          memory = "1Gi" # ChromaDB embedding models need headroom
         }
         startup_cpu_boost = true
       }
@@ -85,12 +85,26 @@ resource "google_cloud_run_v2_service" "backend" {
           }
         }
       }
+
+      # ── Cloud SQL socket mount inside the container ─────────
+      # Cloud Run auto-creates this mount server-side when a
+      # Cloud SQL volume is attached, but the Terraform Google
+      # provider doesn't predict that auto-mount — without
+      # declaring it explicitly here, every `terraform plan`
+      # would propose removing the auto-created mount (and break
+      # the socket on apply). Declaring it explicitly keeps
+      # state and reality aligned.
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
     }
 
-    # ── Cloud SQL socket attachment ──────────────────────────
-    # Mounts the Cloud SQL Auth Proxy socket at
-    # /cloudsql/<connection_name>/ inside the container.
-    # SQLAlchemy finds this via the host= part of DATABASE_URL.
+    # ── Cloud SQL volume declaration at the template level ──
+    # The Cloud SQL Auth Proxy socket is exposed at
+    # /cloudsql/<connection_name>/ inside the container via the
+    # volume_mount above. SQLAlchemy finds this via the host=
+    # part of DATABASE_URL.
     volumes {
       name = "cloudsql"
       cloud_sql_instance {
@@ -146,13 +160,13 @@ resource "google_cloud_run_v2_service" "frontend" {
       image = local.placeholder_image
 
       ports {
-        container_port = 8501   # streamlit default
+        container_port = 8501 # streamlit default
       }
 
       resources {
         limits = {
           cpu    = "1"
-          memory = "1Gi"        # streamlit session state can spike
+          memory = "1Gi" # streamlit session state can spike
         }
         startup_cpu_boost = true
       }
